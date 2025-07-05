@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, TrendingUp, TrendingDown, Edit } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, Edit, Image, Upload } from 'lucide-react';
 
 interface Trade {
   id: string;
@@ -28,6 +28,7 @@ interface Trade {
   reason: string;
   timeframe: string;
   notes: string;
+  chartImage?: string;
 }
 
 const sampleTrades: Trade[] = [
@@ -80,6 +81,22 @@ export const TradeLog = () => {
     emotion: 'Neutral'
   });
 
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setNewTrade({ ...newTrade, chartImage: result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleImageUrlChange = (url: string) => {
+    setNewTrade({ ...newTrade, chartImage: url });
+  };
+
   const handleAddTrade = () => {
     if (newTrade.instrument && newTrade.entryPrice && newTrade.exitPrice) {
       const trade: Trade = {
@@ -99,7 +116,8 @@ export const TradeLog = () => {
         emotion: newTrade.emotion || 'Neutral',
         reason: newTrade.reason || '',
         timeframe: newTrade.timeframe || '4H',
-        notes: newTrade.notes || ''
+        notes: newTrade.notes || '',
+        chartImage: newTrade.chartImage || ''
       };
       
       setTrades([trade, ...trades]);
@@ -275,6 +293,56 @@ export const TradeLog = () => {
                       className="bg-input border-border"
                     />
                   </div>
+                  
+                  <div className="col-span-2 space-y-4">
+                    <div className="flex items-center gap-2">
+                      <Image className="h-4 w-4" />
+                      <Label>Chart Image</Label>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <Label htmlFor="chartUrl">Image URL</Label>
+                        <Input
+                          id="chartUrl"
+                          placeholder="https://example.com/chart.png"
+                          value={newTrade.chartImage?.startsWith('http') ? newTrade.chartImage : ''}
+                          onChange={(e) => handleImageUrlChange(e.target.value)}
+                          className="bg-input border-border"
+                        />
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <div className="h-px bg-border flex-1" />
+                        <span className="text-xs text-muted-foreground">or</span>
+                        <div className="h-px bg-border flex-1" />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="chartFile">Upload Image</Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            id="chartFile"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageUpload}
+                            className="bg-input border-border"
+                          />
+                          <Upload className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                      </div>
+                      
+                      {newTrade.chartImage && (
+                        <div className="mt-3">
+                          <img
+                            src={newTrade.chartImage}
+                            alt="Chart preview"
+                            className="max-w-full h-32 object-cover rounded border border-border"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="flex justify-end gap-2">
@@ -303,6 +371,7 @@ export const TradeLog = () => {
                   <TableHead>Result</TableHead>
                   <TableHead>Pips</TableHead>
                   <TableHead>Emotion</TableHead>
+                  <TableHead>Chart</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -343,6 +412,18 @@ export const TradeLog = () => {
                       <Badge variant="outline" className="text-xs">
                         {trade.emotion}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {trade.chartImage ? (
+                        <img
+                          src={trade.chartImage}
+                          alt="Chart"
+                          className="w-8 h-8 object-cover rounded cursor-pointer hover:scale-150 transition-transform"
+                          onClick={() => window.open(trade.chartImage, '_blank')}
+                        />
+                      ) : (
+                        <Image className="h-4 w-4 text-muted-foreground" />
+                      )}
                     </TableCell>
                     <TableCell>
                       <Button variant="ghost" size="sm">
