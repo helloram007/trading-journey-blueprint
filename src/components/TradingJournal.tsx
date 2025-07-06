@@ -13,8 +13,71 @@ import { GoalSetting } from './trading/GoalSetting';
 import { PsychologyTracker } from './trading/PsychologyTracker';
 import { TradingImages } from './trading/TradingImages';
 
+interface Trade {
+  id: string;
+  date: string;
+  time: string;
+  instrument: string;
+  direction: 'Long' | 'Short';
+  entryPrice: number;
+  exitPrice: number;
+  quantity: number;
+  stopLoss: number;
+  target: number;
+  riskReward: string;
+  result: number;
+  resultPips: number;
+  emotion: string;
+  reason: string;
+  timeframe: string;
+  notes: string;
+  chartImage?: string;
+}
+
+const sampleTrades: Trade[] = [
+  {
+    id: '1',
+    date: '2024-07-05',
+    time: '09:30',
+    instrument: 'EUR/USD',
+    direction: 'Long',
+    entryPrice: 1.0845,
+    exitPrice: 1.0892,
+    quantity: 10000,
+    stopLoss: 1.0820,
+    target: 1.0895,
+    riskReward: '1:2.0',
+    result: 47.00,
+    resultPips: 47,
+    emotion: 'Confident',
+    reason: 'Breakout & retest of resistance',
+    timeframe: '4H',
+    notes: 'Clean setup, followed plan perfectly'
+  },
+  {
+    id: '2',
+    date: '2024-07-04',
+    time: '14:15',
+    instrument: 'GBP/USD',
+    direction: 'Short',
+    entryPrice: 1.2756,
+    exitPrice: 1.2733,
+    quantity: 5000,
+    stopLoss: 1.2780,
+    target: 1.2720,
+    riskReward: '1:1.5',
+    result: -11.50,
+    resultPips: -23,
+    emotion: 'FOMO',
+    reason: 'Rejection at resistance',
+    timeframe: '1H',
+    notes: 'Entered too late, emotion-driven trade'
+  }
+];
+
 const TradingJournal = () => {
   const [activeTab, setActiveTab] = useState('trades');
+  const [trades, setTrades] = useState<Trade[]>(sampleTrades);
 
   // Sample stats for the dashboard
   const stats = {
@@ -141,7 +204,7 @@ const TradingJournal = () => {
           </TabsList>
 
           <TabsContent value="trades" className="mt-6">
-            <TradeLog />
+            <TradeLog trades={trades} setTrades={setTrades} />
           </TabsContent>
 
           <TabsContent value="plan" className="mt-6">
@@ -149,7 +212,7 @@ const TradingJournal = () => {
           </TabsContent>
 
           <TabsContent value="weekly" className="mt-6">
-            <WeeklyReview />
+            <WeeklyReview trades={trades} />
           </TabsContent>
 
           <TabsContent value="monthly" className="mt-6">

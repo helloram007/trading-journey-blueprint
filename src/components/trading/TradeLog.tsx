@@ -31,49 +31,12 @@ interface Trade {
   chartImage?: string;
 }
 
-const sampleTrades: Trade[] = [
-  {
-    id: '1',
-    date: '2024-07-05',
-    time: '09:30',
-    instrument: 'EUR/USD',
-    direction: 'Long',
-    entryPrice: 1.0845,
-    exitPrice: 1.0892,
-    quantity: 10000,
-    stopLoss: 1.0820,
-    target: 1.0895,
-    riskReward: '1:2.0',
-    result: 47.00,
-    resultPips: 47,
-    emotion: 'Confident',
-    reason: 'Breakout & retest of resistance',
-    timeframe: '4H',
-    notes: 'Clean setup, followed plan perfectly'
-  },
-  {
-    id: '2',
-    date: '2024-07-04',
-    time: '14:15',
-    instrument: 'GBP/USD',
-    direction: 'Short',
-    entryPrice: 1.2756,
-    exitPrice: 1.2733,
-    quantity: 5000,
-    stopLoss: 1.2780,
-    target: 1.2720,
-    riskReward: '1:1.5',
-    result: -11.50,
-    resultPips: -23,
-    emotion: 'FOMO',
-    reason: 'Rejection at resistance',
-    timeframe: '1H',
-    notes: 'Entered too late, emotion-driven trade'
-  }
-];
+interface TradeLogProps {
+  trades: Trade[];
+  setTrades: React.Dispatch<React.SetStateAction<Trade[]>>;
+}
 
-export const TradeLog = () => {
-  const [trades, setTrades] = useState<Trade[]>(sampleTrades);
+export const TradeLog = ({ trades, setTrades }: TradeLogProps) => {
   const [isAddingTrade, setIsAddingTrade] = useState(false);
   const [newTrade, setNewTrade] = useState<Partial<Trade>>({
     direction: 'Long',

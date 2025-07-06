@@ -9,6 +9,27 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Calendar, TrendingUp, TrendingDown, Target, Brain, Plus } from 'lucide-react';
 
+interface Trade {
+  id: string;
+  date: string;
+  time: string;
+  instrument: string;
+  direction: 'Long' | 'Short';
+  entryPrice: number;
+  exitPrice: number;
+  quantity: number;
+  stopLoss: number;
+  target: number;
+  riskReward: string;
+  result: number;
+  resultPips: number;
+  emotion: string;
+  reason: string;
+  timeframe: string;
+  notes: string;
+  chartImage?: string;
+}
+
 interface WeeklyReviewData {
   weekEnding: string;
   totalTrades: number;
@@ -26,43 +47,12 @@ interface WeeklyReviewData {
   actionSteps: string;
 }
 
-const sampleReviews: WeeklyReviewData[] = [
-  {
-    weekEnding: '2024-07-05',
-    totalTrades: 12,
-    winningTrades: 8,
-    losingTrades: 4,
-    winRate: 66.7,
-    netPL: 285.50,
-    rulesFollowed: true,
-    mistakes: 'Entered one trade without proper confirmation due to FOMO. Need to be more patient.',
-    lessons: 'Patience pays off. Best trades came from waiting for perfect setups.',
-    bestTrade: 'EUR/USD breakout & retest - followed plan perfectly, 2.5R win',
-    worstTrade: 'GBP/USD revenge trade after initial loss - emotional decision',
-    emotionalState: 7,
-    emotionalNotes: 'Generally disciplined but had one emotional moment after early loss',
-    actionSteps: 'Continue current approach. Add meditation before trading sessions.'
-  },
-  {
-    weekEnding: '2024-06-28',
-    totalTrades: 8,
-    winningTrades: 5,
-    losingTrades: 3,
-    winRate: 62.5,
-    netPL: 147.30,
-    rulesFollowed: false,
-    mistakes: 'Took trades during news events twice. Risk management was inconsistent.',
-    lessons: 'News events create too much volatility. Stick to plan completely.',
-    bestTrade: 'USD/JPY trend continuation - patient entry rewarded',
-    worstTrade: 'EUR/GBP during ECB announcement - should have stayed out',
-    emotionalState: 5,
-    emotionalNotes: 'Felt pressured to trade, leading to mistakes',
-    actionSteps: 'Review economic calendar daily. Set alerts for news events.'
-  }
-];
+interface WeeklyReviewProps {
+  trades: Trade[];
+}
 
-export const WeeklyReview = () => {
-  const [reviews, setReviews] = useState<WeeklyReviewData[]>(sampleReviews);
+export const WeeklyReview = ({ trades }: WeeklyReviewProps) => {
+  const [reviews, setReviews] = useState<WeeklyReviewData[]>([]);
   const [isAddingReview, setIsAddingReview] = useState(false);
   const [newReview, setNewReview] = useState<Partial<WeeklyReviewData>>({
     weekEnding: new Date().toISOString().split('T')[0],
@@ -70,36 +60,68 @@ export const WeeklyReview = () => {
     rulesFollowed: true
   });
 
+  const getWeekTrades = (weekEndingDate: string) => {
+    const endDate = new Date(weekEndingDate);
+    const startDate = new Date(endDate);
+    startDate.setDate(endDate.getDate() - 6); // Get 7 days (week)
+    
+    return trades.filter(trade => {
+      const tradeDate = new Date(trade.date);
+      return tradeDate >= startDate && tradeDate <= endDate;
+    });
+  };
+
+  const calculateWeekMetrics = (weekEndingDate: string) => {
+    const weekTrades = getWeekTrades(weekEndingDate);
+    const winningTrades = weekTrades.filter(trade => trade.result > 0);
+    const losingTrades = weekTrades.filter(trade => trade.result < 0);
+    const totalPL = weekTrades.reduce((sum, trade) => sum + trade.result, 0);
+    const winRate = weekTrades.length > 0 ? (winningTrades.length / weekTrades.length) * 100 : 0;
+    
+    const bestTrade = weekTrades.reduce((best, trade) => 
+      trade.result > (best?.result || -Infinity) ? trade : best, null as Trade | null);
+    const worstTrade = weekTrades.reduce((worst, trade) => 
+      trade.result < (worst?.result || Infinity) ? trade : worst, null as Trade | null);
+
+    return {
+      totalTrades: weekTrades.length,
+      winningTrades: winningTrades.length,
+      losingTrades: losingTrades.length,
+      winRate,
+      netPL: totalPL,
+      bestTradeDesc: bestTrade ? `${bestTrade.instrument} ${bestTrade.direction} - ${bestTrade.reason}` : '',
+      worstTradeDesc: worstTrade ? `${worstTrade.instrument} ${worstTrade.direction} - ${worstTrade.reason}` : ''
+    };
+  };
+
   const handleAddReview = () => {
-    if (newReview.totalTrades && newReview.netPL !== undefined) {
-      const winRate = newReview.totalTrades ? 
-        ((newReview.winningTrades || 0) / newReview.totalTrades) * 100 : 0;
-      
-      const review: WeeklyReviewData = {
-        weekEnding: newReview.weekEnding || new Date().toISOString().split('T')[0],
-        totalTrades: Number(newReview.totalTrades) || 0,
-        winningTrades: Number(newReview.winningTrades) || 0,
-        losingTrades: (Number(newReview.totalTrades) || 0) - (Number(newReview.winningTrades) || 0),
-        winRate: winRate,
-        netPL: Number(newReview.netPL) || 0,
-        rulesFollowed: newReview.rulesFollowed || true,
-        mistakes: newReview.mistakes || '',
-        lessons: newReview.lessons || '',
-        bestTrade: newReview.bestTrade || '',
-        worstTrade: newReview.worstTrade || '',
-        emotionalState: Number(newReview.emotionalState) || 5,
-        emotionalNotes: newReview.emotionalNotes || '',
-        actionSteps: newReview.actionSteps || ''
-      };
-      
-      setReviews([review, ...reviews]);
-      setNewReview({
-        weekEnding: new Date().toISOString().split('T')[0],
-        emotionalState: 5,
-        rulesFollowed: true
-      });
-      setIsAddingReview(false);
-    }
+    const weekEnding = newReview.weekEnding || new Date().toISOString().split('T')[0];
+    const metrics = calculateWeekMetrics(weekEnding);
+    
+    const review: WeeklyReviewData = {
+      weekEnding,
+      totalTrades: metrics.totalTrades,
+      winningTrades: metrics.winningTrades,
+      losingTrades: metrics.losingTrades,
+      winRate: metrics.winRate,
+      netPL: metrics.netPL,
+      rulesFollowed: newReview.rulesFollowed || true,
+      mistakes: newReview.mistakes || '',
+      lessons: newReview.lessons || '',
+      bestTrade: newReview.bestTrade || metrics.bestTradeDesc,
+      worstTrade: newReview.worstTrade || metrics.worstTradeDesc,
+      emotionalState: Number(newReview.emotionalState) || 5,
+      emotionalNotes: newReview.emotionalNotes || '',
+      actionSteps: newReview.actionSteps || ''
+    };
+    
+    setReviews([review, ...reviews]);
+    setNewReview({
+      weekEnding: new Date().toISOString().split('T')[0],
+      emotionalState: 5,
+      rulesFollowed: true
+    });
+    setIsAddingReview(false);
   };
 
   const formatCurrency = (amount: number) => {
@@ -149,7 +171,7 @@ export const WeeklyReview = () => {
             <CardDescription>Review your trading performance for the week</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="week-ending">Week Ending</Label>
                 <Input
@@ -159,47 +181,40 @@ export const WeeklyReview = () => {
                   onChange={(e) => setNewReview({ ...newReview, weekEnding: e.target.value })}
                   className="bg-input border-border"
                 />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="total-trades">Total Trades</Label>
-                <Input
-                  id="total-trades"
-                  type="number"
-                  placeholder="12"
-                  value={newReview.totalTrades || ''}
-                  onChange={(e) => setNewReview({ ...newReview, totalTrades: Number(e.target.value) })}
-                  className="bg-input border-border"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="winning-trades">Winning Trades</Label>
-                <Input
-                  id="winning-trades"
-                  type="number"
-                  placeholder="8"
-                  value={newReview.winningTrades || ''}
-                  onChange={(e) => setNewReview({ ...newReview, winningTrades: Number(e.target.value) })}
-                  className="bg-input border-border"
-                />
+                {newReview.weekEnding && (
+                  <div className="mt-2 p-3 bg-muted/20 rounded-lg">
+                    <div className="text-sm text-muted-foreground mb-2">Calculated from your trades:</div>
+                    {(() => {
+                      const metrics = calculateWeekMetrics(newReview.weekEnding);
+                      return (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-center">
+                          <div>
+                            <div className="font-bold">{metrics.totalTrades}</div>
+                            <div className="text-xs text-muted-foreground">Total</div>
+                          </div>
+                          <div>
+                            <div className="font-bold text-profit">{metrics.winningTrades}</div>
+                            <div className="text-xs text-muted-foreground">Winners</div>
+                          </div>
+                          <div>
+                            <div className="font-bold">{metrics.winRate.toFixed(1)}%</div>
+                            <div className="text-xs text-muted-foreground">Win Rate</div>
+                          </div>
+                          <div>
+                            <div className={`font-bold ${metrics.netPL > 0 ? 'text-profit' : 'text-loss'}`}>
+                              {formatCurrency(metrics.netPL)}
+                            </div>
+                            <div className="text-xs text-muted-foreground">Net P&L</div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="net-pl">Net P&L ($)</Label>
-                <Input
-                  id="net-pl"
-                  type="number"
-                  step="0.01"
-                  placeholder="285.50"
-                  value={newReview.netPL || ''}
-                  onChange={(e) => setNewReview({ ...newReview, netPL: Number(e.target.value) })}
-                  className="bg-input border-border"
-                />
-              </div>
-              
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="rules-followed">Rules Followed?</Label>
                 <Select 
