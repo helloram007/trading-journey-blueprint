@@ -23,24 +23,25 @@ interface TradingPlanData {
 }
 
 const defaultPlan: TradingPlanData = {
-  strategyName: "Breakout & Retest Strategy",
-  description: "Trading confirmed breakouts of key levels with pullback confirmation",
+  strategyName: "Multi-Timeframe Trend Following",
+  description: "Trading in alignment with higher timeframe trend direction using lower timeframe entries",
   analysisTimeframes: ["Daily", "4H"],
-  entryTimeframes: ["4H", "1H"],
-  keyLevels: "• Major S/R levels from Daily timeframe\n• Previous swing highs/lows\n• Round numbers (psychological levels)\n• Fibonacci retracement levels",
-  setupCriteria: "• Clear breakout of key level with volume\n• Pullback to broken level (retest)\n• Confirmation candle pattern\n• RSI not in extreme territory",
-  entryRules: "• Enter on confirmation candle after retest\n• Entry above/below retest candle high/low\n• Stop loss below/above the retested level\n• Target at next major level",
-  exitRules: "• Take profit at predetermined target\n• Move stop to breakeven after 1:1 R/R\n• Trail stop if trend continues strong\n• Exit if setup invalidated",
-  riskManagement: "• Maximum 2% risk per trade\n• Maximum 6% total portfolio risk\n• No more than 3 open positions\n• Daily loss limit: 4%\n• Weekly loss limit: 10%",
-  avoidConditions: "• Low volume breakouts\n• News events within 30 minutes\n• Major economic releases\n• End of week/month volatility\n• Choppy, ranging markets",
+  entryTimeframes: ["1H", "15M"],
+  keyLevels: "• Daily trend direction (uptrend/downtrend/sideways)\n• 4H trend direction and market structure\n• Key Daily S/R levels\n• Weekly swing highs/lows\n• Major round numbers (00, 50 levels)",
+  setupCriteria: "• Daily timeframe shows clear trend direction\n• 4H confirms the Daily trend direction\n• Lower timeframe (1H) shows pullback/retracement\n• Wait for continuation signal in trend direction\n• Volume confirms the move",
+  entryRules: "• Only trade in direction of Daily trend\n• Wait for 1H pullback against Daily trend\n• Enter on 15M confirmation candle\n• Entry: Break of 15M structure in trend direction\n• Stop loss: Beyond recent swing (1H timeframe)\n• Target: Next significant level on 4H/Daily",
+  exitRules: "• Take partial profit at 1:1 R/R\n• Move stop to breakeven after 1:1\n• Trail remaining position using 1H swing levels\n• Exit completely if Daily trend changes\n• Exit if 4H shows reversal signals",
+  riskManagement: "• Maximum 1.5% risk per trade\n• Maximum 4% total portfolio risk\n• No more than 2 open positions\n• Daily loss limit: 3%\n• Weekly loss limit: 8%\n• Never trade against Daily trend",
+  avoidConditions: "• Trading against Daily trend direction\n• Unclear/choppy Daily trend\n• Major news events (30min before/after)\n• Low volume sessions\n• Friday afternoon/Sunday evening\n• When multiple timeframes conflict",
   checklist: [
-    "Market structure analysis completed",
-    "Key levels identified and marked", 
-    "Risk calculated (2% max)",
-    "Entry and exit plan defined",
-    "No conflicting news events",
-    "Emotional state is neutral/positive",
-    "Setup meets all criteria",
+    "Daily trend direction identified",
+    "4H confirms Daily trend", 
+    "1H shows pullback opportunity",
+    "15M entry signal present",
+    "Risk calculated (1.5% max)",
+    "Stop loss and targets set",
+    "No major news pending",
+    "All timeframes aligned",
     "R:R ratio minimum 1:2"
   ]
 };
